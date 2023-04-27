@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <title>Pomodoro Timer</title>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            background-color: #fff;
+            color: #000;
+            font-family: Arial, sans-serif;
+            font-size: 16px;
+            line-height: 1.5;
+            margin: 0;
+            padding: 0;
+            text-align: center;
+        }
+
+        h1 {
+            margin: 30px 0;
+        }
+
+        #timer {
+            font-size: 48px;
+            margin: 50px 0;
+        }
+
+        button {
+            background-color: #000;
+            border: none;
+            border-radius: 4px;
+            color: #fff;
+            cursor: pointer;
+            font-size: 20px;
+            margin: 10px;
+            padding: 10px;
+            transition: background-color 0.2s;
+        }
+
+        button:hover {
+            background-color: #444;
+        }
+
+        #break {
+            background-color: #ccc;
+            color: #000;
+        }
+
+        #break:hover {
+            background-color: #ddd;
+        }
+
+        p {
+            margin: 20px 0;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>Pomodoro Timer</h1>
+
+    <div id="timer">25:00</div>
+
+    <button id="start">Iniciar/Pausar</button>
+    <button id="reset">Reiniciar</button>
+    <button id="break">Pausa</button>
+
+    <p>Ciclos executados: <span id="cycles">0</span></p>
+
+    <script>
+        let interval;
+        let timeLeft;
+        let isRunning = false;
+        let isBreak = false;
+        let cyclesCompleted = parseInt(localStorage.getItem('cyclesCompleted'), 10) || 0;
+
+        function startTimer(duration) {
+            let timerDisplay = document.querySelector('#timer');
+            let minutes, seconds;
+
+            interval = setInterval(function () {
+                minutes = parseInt(duration / 60, 10);
+                seconds = parseInt(duration % 60, 10);
+
+                minutes = minutes < 10 ? '0' + minutes : minutes;
+                seconds = seconds < 10 ? '0' + seconds : seconds;
+
+                timerDisplay.textContent = minutes + ':' + seconds;
+
+                if (--duration < 0) {
+                    clearInterval(interval);
+                    isRunning = false;
+
+                    if (isBreak) {
+                        alert('Pausa encerrada. Volte ao trabalho!');
+                        isBreak = false;
+                        cyclesCompleted++;
+                        localStorage.setItem('cyclesCompleted', cyclesCompleted);
+                        document.querySelector('#cycles').textContent = cyclesCompleted;
+                        startTimer(25 * 60);
+                    } else {
+                        alert('Hora de descansar um pouco!');
+                        isBreak = true;
+                        startTimer(5 * 60);
+                    }
+                }
+            }, 1000);
+        }
+
+        function stopTimer() {
+            clearInterval(interval);
+            isRunning = false;
+        }
+
+        function toggleTimer() {
+            if (isRunning) {
+                stopTimer();
+            } else {
+                isRunning = true;
+                startTimer(timeLeft || 25 * 60);
+            }
+        }
+
+        document.querySelector('#start').addEventListener('click', toggleTimer);
+
+        document.querySelector('#reset').addEventListener('click', function () {
+            stopTimer();
+            isBreak = false;
+            timeLeft = null;
+            document.querySelector('#timer').textContent = '25:00';
+        });
+
+        document.querySelector('#break').addEventListener('click', function () {
+            if (!isRunning && !isBreak) {
+                alert('Inicie o temporizador antes de pausar.');
+            } else if (!isBreak) {
+                stopTimer();
+                isBreak = true;
+                timeLeft = parseInt(document.querySelector('#timer').textContent.split(':')[0], 10) * 60;
+                alert('Pausa iniciada. Você tem 5 minutos.');
+                startTimer(5 * 60);
+            } else {
+                alert('Você já está em uma pausa!');
+            }
+        });
+
+        document.querySelector('#cycles').textContent = cyclesCompleted;
+    </script>
+</body>
+
+</html>
